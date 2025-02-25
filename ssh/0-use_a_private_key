@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 # uses ssh to connect to my server
-ssh -i ~/.ssh/school ubuntu@128a7d5bc31f
+ssh -i ~/.ssh/school ubuntu@128a7d5bc31f.e8a77726.alu-cod.online
