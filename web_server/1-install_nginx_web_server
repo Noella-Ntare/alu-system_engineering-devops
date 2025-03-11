@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/envbash
 
 # Update package lists
 apt-get update -y
