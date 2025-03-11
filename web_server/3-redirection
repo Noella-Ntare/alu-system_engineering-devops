@@ -1,9 +1,24 @@
 #!/usr/bin/env bash
 # Script that installs Nginx server and redirects /redirect_me
 
-sudo apt-get -y update
-sudo apt-get -y install nginx
-sudo ufw allow 'Nginx HTTP'
-echo "Holberton School" | sudo tee /var/www/html/index
-sudo sed -i '/listen 80 default_server/a rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4/ permanent;' /etc/nginx/sites-available/default
-sudo service nginx restart
+# Update package lists
+apt-get update -y
+
+# Install Nginx
+apt-get install nginx -y
+
+# Ensure Nginx is running
+service nginx start
+
+# Allow traffic on port 80
+ufw allow 80/tcp
+
+# Configure redirection
+sed -i '/server_name _;/a \
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }' /etc/nginx/sites-available/default
+
+# Reload Nginx to apply changes
+nginx -s reload
+
