@@ -14,5 +14,12 @@ echo 'Holberton School for the win!' > /var/www/html/index.html
 # Allow traffic on port 80
 ufw allow 80/tcp
 
+# Create custom index.html with required content
+echo 'Holberton School' > /var/www/html/index.html
+
+# Set correct permissions and ownership
+chmod 644 /var/www/html/index.html
+chown www-data:www-data /var/www/html/index.html
+
 # Restart Nginx without systemctl
-kill -HUP $(cat /var/run/nginx.pid)
+nginx -s reload
