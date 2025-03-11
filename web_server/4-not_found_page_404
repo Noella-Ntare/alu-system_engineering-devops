@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Script that installs Nginx server, redirects /redirect_me and customizes 404 not found
+
+# Update package lists
+sudo apt-get -y update
+
+# Install Nginx
+sudo apt-get -y install nginx
+
+# Allow Nginx HTTP traffic
+sudo ufw allow "Nginx HTTP"
+
+# Create custom 404 page
+echo "Ceci n'est pas une page" | sudo tee /var/www/html/404.html
+
+# Configure Nginx for 404 error page
+sudo sed -i '/server_name _;/a \
+    error_page 404 /404.html;\
+    location = /404.html {\
+        root /var/www/html;\
+        internal;\
+    }' /etc/nginx/sites-available/default
+
+# Restart Nginx to apply changes
+sudo service nginx restart

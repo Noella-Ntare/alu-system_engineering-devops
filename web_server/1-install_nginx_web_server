@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Update package lists
+apt-get update -y
+
+# Install Nginx
+apt-get install nginx -y
+
+# Ensure Nginx is running
+service nginx start
+
+# Configure Nginx to return 'Holberton School' on root request
+echo 'Holberton School for the win!' > /var/www/html/index.html
+
+# Allow traffic on port 80
+ufw allow 80/tcp
+
+# Create custom index.html with required content
+echo 'Holberton School' > /var/www/html/index.html
+
+# Set correct permissions and ownership
+chmod 644 /var/www/html/index.html
+chown www-data:www-data /var/www/html/index.html
+
+# Restart Nginx without systemctl
+nginx -s reload
