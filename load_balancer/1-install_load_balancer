@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 # Script to install and configure HAProxy as a load balancer for web-01 and web-02
 
-# Update and install required packages
+set -e  # Exit script on any error
+set -o pipefail  # Ensure failures in piped commands are detected
+
+# Ensure script is run as root
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root. Use sudo."
+    exit 1
+fi
+
+# Update system and install required packages
+echo "Updating system and installing HAProxy..."
 apt-get update -y
-apt-get install -y haproxy
+apt-get install -y haproxy curl net-tools ufw
 
 # Enable HAProxy
-echo "ENABLED=1" | sudo tee -a /etc/default/haproxy
+echo "Enabling HAProxy..."
+echo "ENABLED=1" | sudo tee /etc/default/haproxy
 
 # Backup existing HAProxy config
 cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
@@ -45,12 +56,25 @@ backend http_back
     server ${STUDENT_ID}-web-02 54.152.78.172:80 check
 EOF
 
-# Restart HAProxy service
-service haproxy restart
-
-# Enable HAProxy to start on boot
+# Restart and enable HAProxy service
+echo "Restarting and enabling HAProxy..."
+systemctl restart haproxy
 systemctl enable haproxy
 
-# Print configuration info to ensure output contains required strings
-echo "HAProxy configured with servers: ${STUDENT_ID}-web-01 and ${STUDENT_ID}-web-02"
-echo "HAProxy configured with servers: ${STUDENT_ID}-web-01 and ${STUDENT_ID}-web-02"
+# Configure firewall rules
+echo "Configuring firewall..."
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw --force enable
+
+# Verify HAProxy status
+if systemctl status haproxy --no-pager | grep -q "active (running)"; then
+    echo "HAProxy is running successfully."
+else
+    echo "HAProxy failed to start. Check logs with: journalctl -u haproxy --no-pager"
+    exit 1
+fi
+
+# Print final configuration info
+echo "HAProxy successfully configured with servers: ${STUDENT_ID}-web-01 and ${STUDENT_ID}-web-02"
+
