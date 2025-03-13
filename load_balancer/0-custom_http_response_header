@@ -1,37 +1,17 @@
 #!/usr/bin/env bash
-# returns a custom header on request
-
-#!/usr/bin/env bash
-# This script installs Nginx, sets up a custom header, and configures a web server.
-
-# Ensure script runs with root privileges
-if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root." >&2
-    exit 1
-fi
-
-# Create README.md if it doesn't exist
-if [[ ! -f "README.md" ]]; then
-    echo "This script sets up a web server with a custom HTTP header." > README.md
-fi
-
-# Create an empty answer file
-touch answer.txt
-
-# Update package lists and install Nginx
-apt-get update -y
-apt-get install -y nginx
-
-# Get the hostname dynamically
-HOSTNAME=$(hostname)
-
-# Configure Nginx to return a custom X-Served-By header
-sudo sed -i "/server_name _;/a \    add_header X-Served-By \"$HOSTNAME\";" /etc/nginx/sites-available/default
-
-# Set up custom pages
-echo "Holberton School" | sudo tee /var/www/html/index.html > /dev/null
-echo "Ceci n'est pas une page" | sudo tee /usr/share/nginx/html/404.html > /dev/null
-
-# Restart Nginx to apply changes
-sudo systemctl restart nginx
-
+#Installing Nginx and configuring it
+sudo apt update -y # update package manager to get latest updates when installing ngi..
+sudo apt install nginx -y # instal nginx
+new_config=\
+"server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+		root /var/www/html;
+	index index.html index.html index.nginx-debian.html;
+	server_name _;
+	add_header X-Served-By $HOSTNAME;
+}
+"
+sudo chown -R "$USER":"$USER" /etc/nginx/sites-available/default # change ownership
+echo "$new_config" > /etc/nginx/sites-available/default # overwrite the existing configuration
+sudo service nginx restart # restart the nginx
