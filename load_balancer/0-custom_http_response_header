@@ -11,8 +11,8 @@ apt-get -y install nginx
 echo "Hello World!" > /var/www/html/index.html
 
 # Add custom header configuration to Nginx
-header_config="server_name_;\n\tadd_header X-Served-By \$hostname;"
-sudo sed -i "s/server_name_;/$header_config/" /etc/nginx/sites-available/default
+header_config="server_name _;\n\tadd_header X-Served-By \$hostname;"
+sudo sed -i "s/server_name _;/$header_config/" /etc/nginx/sites-available/default
 
 # Restart Nginx service
 service nginx restart
