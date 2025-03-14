@@ -10,6 +10,10 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+# Add custom header configuration to Nginx
+header_config="server_name _;\n\tadd_header X-Served-By \$hostname;"
+sudo sed -i "s/server_name _;/$header_config/" /etc/nginx/sites-available/default
+
 # Update system and install required packages
 echo "Updating system and installing HAProxy..."
 apt-get update -y
