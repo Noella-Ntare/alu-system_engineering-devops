@@ -30,16 +30,19 @@ defaults
     timeout client  10000
     timeout server  10000
 
-frontend main
+frontend http_front
     bind *:80
-    default_backend web_servers
+    mode http
+    default_backend http_back
 
-backend web_servers
+backend http_back
     balance roundrobin
-    option httpchk
     server web-01 [STUDENT_ID]-web-01:80 check
     server web-02 [STUDENT_ID]-web-02:80 check
 EOF
+
+# Make sure HAProxy can be managed via init script
+systemctl enable haproxy
 
 # Restart HAProxy service
 service haproxy restart
