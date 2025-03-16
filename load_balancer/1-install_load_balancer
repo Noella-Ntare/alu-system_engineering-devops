@@ -1,84 +1,45 @@
 #!/usr/bin/env bash
-# Script to install and configure HAProxy as a load balancer for web-01 and web-02
+# Configures HAProxy on a new Ubuntu machine to distribute traffic to web-01 and web-02 using roundrobin
 
-set -e  # Exit script on any error
-set -o pipefail  # Ensure failures in piped commands are detected
+# Install HAProxy
+apt-get -y update
+apt-get -y install haproxy
 
-# Ensure script is run as root
-if [[ $EUID -ne 0 ]]; then
-    echo "This script must be run as root. Use sudo."
-    exit 1
-fi
+# Enable HAProxy to be started by the init script
+sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
 
-# Add custom header configuration to Nginx
-header_config="server_name _;\n\tadd_header X-Served-By \$hostname;"
-sudo sed -i "s/server_name _;/$header_config/" /etc/nginx/sites-available/default
+# Backup the original configuration file
+cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
 
-# Update system and install required packages
-echo "Updating system and installing HAProxy..."
-apt-get update -y
-apt-get install -y haproxy curl net-tools ufw
-
-# Enable HAProxy
-echo "Enabling HAProxy..."
-echo "ENABLED=1" | sudo tee /etc/default/haproxy
-
-# Backup existing HAProxy config
-cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.bak
-
-# Get hostname prefix (student ID)
-STUDENT_ID=$(hostname | cut -d '-' -f1)
-
-# Configure HAProxy
+# Create new HAProxy configuration
 cat > /etc/haproxy/haproxy.cfg << EOF
 global
-    log /dev/log local0
-    log /dev/log local1 notice
-    chroot /var/lib/haproxy
-    stats socket /run/haproxy/admin.sock mode 660 level admin
-    stats timeout 30s
+    log 127.0.0.1 local0 notice
+    maxconn 2000
     user haproxy
     group haproxy
-    daemon
 
 defaults
-    log global
-    mode http
-    option httplog
-    option dontlognull
-    timeout connect 5000
-    timeout client 50000
-    timeout server 50000
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    retries 3
+    option redispatch
+    timeout connect  5000
+    timeout client  10000
+    timeout server  10000
 
-frontend http_front
+frontend main
     bind *:80
-    default_backend http_back
+    default_backend web_servers
 
-backend http_back
+backend web_servers
     balance roundrobin
-    server ${STUDENT_ID}-web-01 3.89.108.224:80 check
-    server ${STUDENT_ID}-web-02 54.152.78.172:80 check
+    option httpchk
+    server web-01 [STUDENT_ID]-web-01:80 check
+    server web-02 [STUDENT_ID]-web-02:80 check
 EOF
 
-# Restart and enable HAProxy service
-echo "Restarting and enabling HAProxy..."
-systemctl restart haproxy
-systemctl enable haproxy
-
-# Configure firewall rules
-echo "Configuring firewall..."
-ufw allow OpenSSH
-ufw allow 80/tcp
-ufw --force enable
-
-# Verify HAProxy status
-if systemctl status haproxy --no-pager | grep -q "active (running)"; then
-    echo "HAProxy is running successfully."
-else
-    echo "HAProxy failed to start. Check logs with: journalctl -u haproxy --no-pager"
-    exit 1
-fi
-
-# Print final configuration info
-echo "HAProxy successfully configured with servers: ${STUDENT_ID}-web-01 and ${STUDENT_ID}-web-02"
-
+# Restart HAProxy service
+service haproxy restart
