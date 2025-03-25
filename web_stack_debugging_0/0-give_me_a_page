@@ -1,48 +1,17 @@
 #!/usr/bin/env bash
-# Script to install Docker, run container, and configure Apache
 
-# Update package lists
-sudo apt-get update
+docker run -p 8080:80 -d -it holbertonschool/265-0
 
-# Install Docker dependencies
-sudo apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
+docker exec -it <container_id> /bin/bash
 
-# Add Docker's official GPG key
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+apt-get update
+apt-get install -y apache2
 
-# Set up Docker repository
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
+echo "Hello Holberton" > /var/www/html/index.html
 
-# Update package lists again
-sudo apt-get update
 
-# Install Docker CE
-sudo apt-get install -y docker-ce
+service apache2 start
 
-# Add current user to docker group (optional, allows running docker without sudo)
-sudo usermod -aG docker $USER
-
-# Pull the specific Docker image
-sudo docker pull holbertonschool/265-0
-
-# Run the Docker container
-CONTAINER_ID=$(sudo docker run -p 8080:80 -d -it holbertonschool/265-0)
-
-# Execute commands inside the container to set up Apache
-sudo docker exec -it "$CONTAINER_ID" /bin/bash -c "
-    apt-get update
-    apt-get install -y apache2
-    echo 'Hello Holberton' > /var/www/html/index.html
-    service apache2 start
-"
-
-# Optional: Verify the container is running
-sudo docker ps
+exit
+curl 0:8080
 
