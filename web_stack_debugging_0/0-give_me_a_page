@@ -1,4 +1,19 @@
 #!/usr/bin/env bash
-# Run Apache on the holbertonschool/265-0 Docker container.
-echo "ServerName localhost" >> /etc/apache2.conf
+# Script to debug and start Apache in a Docker container
+
+# Run the Docker container
+CONTAINER_ID=$(docker run -p 8080:80 -d -it holbertonschool/265-0)
+
+# Execute commands inside the container
+docker exec -it "$CONTAINER_ID" /bin/bash << EOF
+apt-get update
+apt-get install -y apache2
+echo "Hello Holberton" > /var/www/html/index.html
 service apache2 start
+service apache2 status
+EOF
+
+# Verify the web server
+sleep 2  # Short delay to ensure service is fully up
+curl 0:8080
+
