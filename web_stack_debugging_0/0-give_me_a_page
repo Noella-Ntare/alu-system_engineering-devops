@@ -1,17 +1,4 @@
 #!/usr/bin/env bash
-
-docker run -p 8080:80 -d -it holbertonschool/265-0
-
-docker exec -it <container_id> /bin/bash
-
-apt-get update
-apt-get install -y apache2
-
-echo "Hello Holberton" > /var/www/html/index.html
-
-
+# Run Apache on the holbertonschool/265-0 Docker container.
+echo "ServerName localhost" >> /etc/apache2.conf
 service apache2 start
-service apache2 status
-
-exit
-curl 0:8080
