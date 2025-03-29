@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Configure Nginx with a custom HTTP header X-Served-By containing hostname
+# Configure Nginx with a custom HTTP header X-Served-By containing the hostname
 
 # Update package lists
 apt-get -y update
@@ -10,8 +10,16 @@ apt-get -y install nginx
 # Create a Hello World page
 echo "Hello World!" > /var/www/html/index.html
 
-# Add custom header configuration to Nginx
-sed -i "/server_name _;/a \\\tadd_header X-Served-By \$hostname;" /etc/nginx/sites-available/default
+# Create a custom configuration for the header
+cat > /etc/nginx/conf.d/custom_header.conf << EOF
+server_tokens off;
+add_header X-Served-By \$hostname;
+EOF
+
+# Ensure the conf.d directory is included in the main config
+if ! grep -q "include /etc/nginx/conf.d/*.conf;" /etc/nginx/nginx.conf; then
+    sed -i '/include \/etc\/nginx\/sites-enabled\/\*/a \\tinclude \/etc\/nginx\/conf.d\/\*.conf;' /etc/nginx/nginx.conf
+fi
 
 # Restart Nginx service
 service nginx restart
