@@ -1,48 +1,25 @@
 #!/usr/bin/env bash
-# Configures HAProxy on a new Ubuntu machine to distribute traffic to web-01 and web-02 using roundrobin
+# Setup haproxy on server lb-01 to serve web-01 and web-02.
 
-# Install HAProxy
-apt-get -y update
-apt-get -y install haproxy
+sudo apt-get -y update
+sudo apt-get -y install haproxy
 
-# Enable HAProxy to be started by the init script
-sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
+# Enable HAProxy to be started by init script
+echo "ENABLED=1" | sudo tee -a /etc/default/haproxy
 
-# Backup the original configuration file
-cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
+# Backup original config
+sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.original
 
-# Create new HAProxy configuration
-cat > /etc/haproxy/haproxy.cfg << EOF
-global
-    log 127.0.0.1 local0 notice
-    maxconn 2000
-    user haproxy
-    group haproxy
+echo \
+"
+frontend lb-frontend
+        bind *:80
+        mode http
+        default_backend lb-backend
+backend lb-backend
+        balance roundrobin
+        server web-01 52.70.84.210:80 check
+        server web-02 52.202.28.73:80 check
+" | sudo tee -a /etc/haproxy/haproxy.cfg
 
-defaults
-    log     global
-    mode    http
-    option  httplog
-    option  dontlognull
-    retries 3
-    option redispatch
-    timeout connect  5000
-    timeout client  10000
-    timeout server  10000
-
-frontend http_front
-    bind *:80
-    mode http
-    default_backend http_back
-
-backend http_back
-    balance roundrobin
-    server web-01 6382-web-01:80 check
-    server web-02 6382-web-02:80 check
-EOF
-
-# Make sure HAProxy can be managed via init script
-systemctl enable haproxy
-
-# Restart HAProxy service
-service haproxy restart
+sudo service haproxy restart
