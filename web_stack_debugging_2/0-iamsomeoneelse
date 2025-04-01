@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# This script runs the 'whoami' command as another user.
+# This script runs the 'whoami' command as another user, handling users with and without a HOME directory.
 
-# Check if a user argument is provided
+# Check if a username is provided
 if [[ -z "$1" ]]; then
     echo "Usage: $0 <username>"
     exit 1
 fi
 
-# Run 'whoami' as the specified user
-sudo -u "$1" whoami
+USER_NAME="$1"
+
+# Set HOME directory explicitly if needed and run 'whoami'
+sudo -Hu "$USER_NAME" env HOME="/home/$USER_NAME" whoami 2>/dev/null || sudo -u "$USER_NAME" whoami
 
