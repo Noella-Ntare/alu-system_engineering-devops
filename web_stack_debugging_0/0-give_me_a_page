@@ -1,17 +1,5 @@
 #!/usr/bin/env bash
+# commands used to fix the return issue
 
-docker run -p 8080:80 -d -it holbertonschool/265-0
-
-docker exec -it <container_id> /bin/bash
-
-apt-get update
-apt-get install -y apache2
-
-echo "Hello Holberton" > /var/www/html/index.html
-
-
+echo "ServerName localhost" > /etc/apache2.conf
 service apache2 start
-
-exit
-curl 0:8080
-
